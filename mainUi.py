@@ -1,9 +1,22 @@
+import threading
+from datetime import time
+
+import PIL
+import cv2
+import imutils
+from PIL.ImageQt import ImageQt
 from PyQt5 import QtGui, QtCore, uic
 from PyQt5.QtGui import QPixmap, QStandardItemModel
 from PyQt5.QtWidgets import QMainWindow, QApplication
 import sys,crawling,cliSocket
 
+from imutils.video import VideoStream
+from pyzbar import pyzbar
 
+
+
+result=""
+found = set()
 
 
 form_class = uic.loadUiType('untitled.ui')[0]
@@ -59,6 +72,68 @@ class WindowClass(QMainWindow,form_class):
         self.BookAuthorLabel.setWordWrap(True)
 
         self.userListTable.setHorizontalHeaderLabels(['number', 'name', 'price'])
+        threading.Thread(target=self.camViewThread).start()#캠 스레드 발동.
+        self.videoToTextBtn.clicked.connect(self.cameraRecgonize)
+
+
+    def camViewThread(self):
+        vs = VideoStream(src=0).start()
+        # vs = VideoStream(usePiCamera=True).start()
+        #time.sleep(2.0)
+        global result
+        while True:
+            frame = vs.read()
+            frame = imutils.resize(frame, width=400)
+
+            barcodes = pyzbar.decode(frame)  # 캠에 찍힌 바코드가 여러개일 경우 하나씩 불러온다
+            #print(barcodes)
+
+            for barcode in barcodes:
+                print(barcode)
+                (x, y, w, h) = barcode.rect
+                # frame에 (x,y)에서 (x+w,y+h) 까지 빨간(blue=0,green=0,red=255), 두께 2의 직사각형그린다
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                barcodeData = barcode.data.decode("utf-8")  # 바코드 데이터를 읽어 온다.
+                text = str(barcodeData) # 아하 이놈이 데이터로구나.
+                if(text != ""):#빈칸이 아닐때만.
+                    result =text#갱신.
+                #cv2.putText(frame, text, (x, y - 10),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                # 텍스트를 frame에 넣는다.
+                # 만약 아직까지 찾지 않은 바코드면 프린트한다.
+                if barcodeData not in found:
+                    #print(barcodeData)
+                    found.add(barcodeData)
+            # 프로세스가 끝나면 frame을 보여준다. 바코드가 있으면 바코드 번호와 직사각형이 보인다.
+            #cv2.imshow("Barcode Scanner", frame)
+            # q를 누르면 바코드 스캔을 끝난다.
+
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                break
+
+        # 정상적으로 종료한다.
+
+
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            Image = PIL.Image.fromarray(img, 'RGB')
+            Image = ImageQt(Image).copy()
+            videoWidth = self.camLabel.width()  # 이게 내가알기로는 ui(WindowClass)상에서의 widget 관련 값임.
+            videoHeight = self.camLabel.height()
+            Image = Image.scaled(videoWidth, videoHeight)  # 출력할 이미지를 위젯크기에 끼워맞추기.
+            self.camLabel.setPixmap(QPixmap.fromImage(Image))
+
+        cv2.destroyAllWindows()
+        vs.stop()
+
+
+    def cameraRecgonize(self):
+        result =""
+
+        if(result==""):
+            self.IsbnManualInput.setPlainText("제대로 인식시켜 주세요")
+        else:
+            self.IsbnManualInput.setText(result)
+
 
 
 
@@ -73,6 +148,8 @@ class WindowClass(QMainWindow,form_class):
         self.stackedWidget.setCurrentIndex(1)
     def gotoPage1(self):
         self.stackedWidget.setCurrentIndex(0)
+
+
 
     def isbnSearch(self,searchLetter):
         #"979-11-5839-179-9"
