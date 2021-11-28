@@ -1,6 +1,6 @@
 import threading
 from datetime import time
-
+from stringTest import turnStringToIsbn
 import PIL
 import cv2
 import imutils
@@ -132,6 +132,8 @@ class WindowClass(QMainWindow,form_class):
         if(result==""):
             self.IsbnManualInput.setPlainText("제대로 인식시켜 주세요")
         else:
+
+            result = turnStringToIsbn(result)
             self.IsbnManualInput.setText(result)
 
 
