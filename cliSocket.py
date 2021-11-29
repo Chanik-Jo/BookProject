@@ -20,51 +20,54 @@ def recvMsg(clientSock,window):
     # 멀티스레드를 하면 GIL이 걸려서 읽기도 쓰기도 못하는 골떄는 상황으로 들어간다.
     # GIL 공통변수를 쓰면 자동으로 락걸리는걸 회피하기위해 아예 매개변수로 넘겨줬다.  내부적으론
     # "복사"가 되었으려나?????
+    try:
+        sizeReceive = clientSock.recv(40)
+        sizeReceive=int.from_bytes(sizeReceive,"little")
+        print("recv msg size ",sizeReceive)# 겨우 숫자가 올바르게 돌아왔다.  이거 알아내는데 3시간 날렸네.
 
-    sizeReceive = clientSock.recv(40)
-    sizeReceive=int.from_bytes(sizeReceive,"little")
-    print("recv msg size ",sizeReceive)# 겨우 숫자가 올바르게 돌아왔다.  이거 알아내는데 3시간 날렸네.
+        msgReceive =clientSock.recv(sizeReceive)#제대로 다 왔는데 이걸 \t 같은 특문을 어찌 번역해야 하냐.....
+        msgReceive = msgReceive.decode('utf-8')# 이러니까 된다!!
+        print("received Real Message \n",msgReceive)#결국 메모리를 타이트하게 알뜰살뜰하게 쓰면서 송수신이 성공했다.
+        #문제는 그것을 리스트로 변환해주는 것이다.
+        if msgReceive=="":
+            return
+        print("msgREceive type ",type(msgReceive))
+        msgReceive = msgReceive.rstrip('\n')#remove last \n 할 의도였는데 .
+        print("msg receive\n",msgReceive)
+        lineSpiltedData = msgReceive.split('\n')#모든 \n이 사라지고 거기를 기준으로 갈라졌다
+        print("line spilted data type ",type(lineSpiltedData))
+        print("linespilted data\n",lineSpiltedData)
+        for i in range(len(lineSpiltedData)):
+            tempLine= lineSpiltedData[i].rstrip('\t')#내가 sp엘-아이t 인데 sp아이-엘t로 보고 1시간 가까이 삽질중이었다.
+            tempLine= tempLine.split('\t')#내가 sp엘-아이t 인데 sp아이-엘t로 보고 1시간 가까이 삽질중이었다.
 
-    msgReceive =clientSock.recv(sizeReceive)#제대로 다 왔는데 이걸 \t 같은 특문을 어찌 번역해야 하냐.....
-    msgReceive = msgReceive.decode('utf-8')# 이러니까 된다!!
-    print("received Real Message \n",msgReceive)#결국 메모리를 타이트하게 알뜰살뜰하게 쓰면서 송수신이 성공했다.
-    #문제는 그것을 리스트로 변환해주는 것이다.
-    print("msgREceive type ",type(msgReceive))
-    msgReceive = msgReceive.rstrip('\n')#remove last \n 할 의도였는데 .
-    print("msg receive\n",msgReceive)
-    lineSpiltedData = msgReceive.split('\n')#모든 \n이 사라지고 거기를 기준으로 갈라졌다
-    print("line spilted data type ",type(lineSpiltedData))
-    print("linespilted data\n",lineSpiltedData)
-    for i in range(len(lineSpiltedData)):
-        tempLine= lineSpiltedData[i].rstrip('\t')#내가 sp엘-아이t 인데 sp아이-엘t로 보고 1시간 가까이 삽질중이었다.
-        tempLine= tempLine.split('\t')#내가 sp엘-아이t 인데 sp아이-엘t로 보고 1시간 가까이 삽질중이었다.
-
-        #print("tempLine  ",tempLine)
-        lineSpiltedData[i] = tempLine
-        #print("lineSpiltedData[i]  ",lineSpiltedData[i])
-
-
-    print("\n\n\n\nline spilted data last calculation\n\n\n",lineSpiltedData) #드디어 드디어 성공하였다성공하였다!!!!!
-
-
-    table =window.userListTable
-    table.setRowCount(0)#이게 정상적으로(다 비우기)가 되
-    # 는걸로 보면 레퍼런스는 잘
-    #넘어간걸로 추정
-    table.setColumnWidth(0, table.width() * 1 / 10)
-    table.setColumnWidth(1, table.width() * 7 / 10)
-    table.setColumnWidth(2, table.width() * 2 / 10)
-
-    table.setColumnCount(len(lineSpiltedData[0]))
-
-    for i in range(len(lineSpiltedData)):
-        table.insertRow(table.rowCount())
-        for j in range(len(lineSpiltedData[0])):
-            value =lineSpiltedData[i][j]
-            print("value",value)
-            table.setItem(i, j, QTableWidgetItem(value))
+            #print("tempLine  ",tempLine)
+            lineSpiltedData[i] = tempLine
+            #print("lineSpiltedData[i]  ",lineSpiltedData[i])
 
 
+        print("\n\n\n\nline spilted data last calculation\n\n\n",lineSpiltedData) #드디어 드디어 성공하였다성공하였다!!!!!
+
+
+        table =window.userListTable
+        table.setRowCount(0)#이게 정상적으로(다 비우기)가 되
+        # 는걸로 보면 레퍼런스는 잘
+        #넘어간걸로 추정
+        table.setColumnWidth(0, table.width() * 1 / 10)
+        table.setColumnWidth(1, table.width() * 7 / 10)
+        table.setColumnWidth(2, table.width() * 2 / 10)
+
+        table.setColumnCount(len(lineSpiltedData[0]))
+
+        for i in range(len(lineSpiltedData)):
+            table.insertRow(table.rowCount())
+            for j in range(len(lineSpiltedData[0])):
+                value =lineSpiltedData[i][j]
+                print("value",value)
+                table.setItem(i, j, QTableWidgetItem(value))
+
+    except Exception as e:
+        print("data recv exception ",e)
 
 
 

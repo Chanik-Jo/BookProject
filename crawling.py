@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-isbn="979-11-5839-179-9"
+
+#          979-11-5839-179-9
 
 
 #이건 크롤링 소스였고,
