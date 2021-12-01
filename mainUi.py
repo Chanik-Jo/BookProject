@@ -62,7 +62,7 @@ class WindowClass(QMainWindow,form_class):
         self.bookPhotoLabel.setPixmap(self.bookClipart)
         self.camClipart = QPixmap("scanClipart.jpg")
         self.camLabel.setPixmap(self.camClipart)
-        #lambda: self.button3_func(time.strftime("[%H:%M:%S]\n")
+
         self.manualSearchBtn.clicked.connect(lambda:
                                              self.isbnSearch(self.IsbnManualInput.toPlainText()))#이거 람다식으로 isbn 들어가게 고치기.
 
@@ -72,7 +72,7 @@ class WindowClass(QMainWindow,form_class):
         self.BookAuthorLabel.setWordWrap(True)
 
         self.userListTable.setHorizontalHeaderLabels(['number', 'name', 'price'])
-        threading.Thread(target=self.camViewThread).start()#캠 스레드 발동.
+        #threading.Thread(target=self.camViewThread).start()#캠 스레드 발동.
         self.videoToTextBtn.clicked.connect(self.cameraRecgonize)
         self.IsbnManualInput.setPlainText("978-89-8458-217-0")
 
@@ -176,6 +176,10 @@ class WindowClass(QMainWindow,form_class):
             self.BookAuthorLabel.setText(author)
             self.notificationLabel.setText("바코드를 인식시켜 주세요.")
             print("title publisher author successful")
+
+            #cliSocket.retrieveDBDatafromServer(self,m="insert into custom_table (name,age) values({},{})".format(title,author))
+            #만약  english라면
+            cliSocket.retrieveDBDatafromServer(self,m="insert into custom_table (name,age) values({},{})".format(title,author))
 
 
 

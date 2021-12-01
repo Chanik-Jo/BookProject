@@ -183,7 +183,8 @@ def east_text_detector(image):
     for i in indices:
         # we iterate through each index for finding each valid boxes from the list of all boxes
 
-        box = boxes[i[0]]
+        #box = boxes[i[0]]
+        box = boxes[i]
         # xc, yc is the center of the box
         (xc, yc) = box[0]
 
